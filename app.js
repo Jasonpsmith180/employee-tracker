@@ -57,7 +57,7 @@ function startPrompt() {
                     addEmployee();
                     break;
                 case ('Update an employee role'):
-                    updateEmployee();
+                    console.log(answer.action);
                     break;
             }
         })
@@ -186,8 +186,8 @@ function addRole() {
 
 // Select Functions for Role and Manager for addEmployee function
 // Select Role
+let rolesArr = [];
 function selectRole() {
-    let rolesArr = [];
     db.query(`SELECT * FROM roles`, (err, res) => {
         for (var i = 0; i < res.length; i++) {
             rolesArr.push(res[i].title);
@@ -196,9 +196,9 @@ function selectRole() {
     return rolesArr;
 }
 
-// Select Employee
-function selectEmployee() {
-    let employeeArr = [];
+// Select Manager
+let employeeArr = [];
+function selectManager() {
     db.query(`SELECT * FROM employees`, (err, res) => {
         for (var i = 0; i < res.length; i++) {
             employeeArr.push(res[i].first_name + ' ' + res[i].last_name);
@@ -231,11 +231,11 @@ function addEmployee() {
             name: 'manager',
             type: 'list',
             message: 'What employee will manage the new employee?',
-            choices: selectEmployee()
+            choices: selectManager()
         }
     ]).then(answer => {
         let roleId = selectRole().indexOf(answer.role) + 1;
-        let managerId = selectEmployee().indexOf(answer.manager) + 1;
+        let managerId = selectManager().indexOf(answer.manager) + 1;
         db.query(`INSERT INTO employees SET ?`,
                 {
                     first_name: answer.firstName,
@@ -254,19 +254,18 @@ function addEmployee() {
 
 // Update Employee Role
 function updateEmployee() {
-    console.log(selectRole());
     inquirer.prompt([
         {
             name: 'employee',
             type: 'list',
             message: 'Select an employee.',
-            choices: selectEmployee()
+            choices: employeeArr
         },
         {
             name: 'role',
             type: 'list',
             message: 'Select a new role for the employee.',
-            choices: selectRole()
+            choices: rolesArr
         }
     ]).then(answer => {
         console.log(answer);
