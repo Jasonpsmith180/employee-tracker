@@ -303,18 +303,9 @@ function updateEmployee() {
         ]).then(answer => {
             let employeeId = employeeArray.indexOf(answer.employee) + 1;
             let roleId = rolesArray.indexOf(answer.role) + 1;
-            db.query(`UPDATE employees SET WHERE ?`,
-            {
-                employee_id: employeeId,
-            },
-            {
-                role_id: roleId
-            },
-            function(err) {
-                if (err) throw err;
-                console.table(answer);
-                startPrompt();
-            });
+            db.query(`UPDATE employees SET role_id = ? WHERE id = ?`, [roleId, employeeId]),
+            console.table(answer);
+            startPrompt();
         });
     }
 }
