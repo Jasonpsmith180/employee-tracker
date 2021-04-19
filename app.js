@@ -57,7 +57,7 @@ function startPrompt() {
                     addEmployee();
                     break;
                 case ('Update an employee role'):
-                    console.log(answer.action);
+                    updateEmployee();
                     break;
             }
         })
@@ -210,64 +210,111 @@ function selectManager() {
 
 // Add an Employee
 function addEmployee() {
-    inquirer.prompt([
-        {
-            name: 'firstName',
-            type: 'input',
-            message: 'What is the first name of the employee?'
-        },
-        {
-            name: 'lastName',
-            type: 'input',
-            message: 'What is the last name of the employee?'
-        },
-        {
-            name: 'role',
-            type: 'list',
-            message: 'What is the role of the employee?',
-            choices: selectRole()
-        },
-        {
-            name: 'manager',
-            type: 'list',
-            message: 'What employee will manage the new employee?',
-            choices: selectManager()
+    //grab all roles
+    let rolesArray = []
+    let employeeArray = [];
+    db.query(`SELECT * FROM roles`, (err, res) => {
+        for (var i = 0; i < res.length; i++) {
+            rolesArray.push(res[i].title);
         }
-    ]).then(answer => {
-        let roleId = selectRole().indexOf(answer.role) + 1;
-        let managerId = selectManager().indexOf(answer.manager) + 1;
-        db.query(`INSERT INTO employees SET ?`,
-                {
-                    first_name: answer.firstName,
-                    last_name: answer.lastName,
-                    role_id: roleId,
-                    manager_id: managerId
-                },
-                function(err) {
-                    if (err) throw err;
-                    console.table(answer);
-                    startPrompt();
-                }
-            );
+        //once we pushed everyone in, let's do the same with employeeArray
+        db.query(`SELECT * FROM employees`, (err, res) => {
+            for (var i = 0; i < res.length; i++) {
+                employeeArray.push(res[i].first_name + ' ' + res[i].last_name);
+            }
+            addPrompts()
+        });
     });
+    function addPrompts() {
+        inquirer.prompt([
+            {
+                name: 'firstName',
+                type: 'input',
+                message: 'What is the first name of the employee?'
+            },
+            {
+                name: 'lastName',
+                type: 'input',
+                message: 'What is the last name of the employee?'
+            },
+            {
+                name: 'role',
+                type: 'list',
+                message: 'What is the role of the employee?',
+                choices: selectRole()
+            },
+            {
+                name: 'manager',
+                type: 'list',
+                message: 'What employee will manage the new employee?',
+                choices: selectManager()
+            }
+        ]).then(answer => {
+            let roleId = selectRole().indexOf(answer.role) + 1;
+            let managerId = selectManager().indexOf(answer.manager) + 1;
+            db.query(`INSERT INTO employees SET ?`,
+                    {
+                        first_name: answer.firstName,
+                        last_name: answer.lastName,
+                        role_id: roleId,
+                        manager_id: managerId
+                    },
+                    function(err) {
+                        if (err) throw err;
+                        console.table(answer);
+                        startPrompt();
+                    }
+                );
+        });
+    }
 }
 
 // Update Employee Role
 function updateEmployee() {
-    inquirer.prompt([
-        {
-            name: 'employee',
-            type: 'list',
-            message: 'Select an employee.',
-            choices: employeeArr
-        },
-        {
-            name: 'role',
-            type: 'list',
-            message: 'Select a new role for the employee.',
-            choices: rolesArr
+    //grab all roles
+    let rolesArray = []
+    let employeeArray = [];
+    db.query(`SELECT * FROM roles`, (err, res) => {
+        for (var i = 0; i < res.length; i++) {
+            rolesArray.push(res[i].title);
         }
-    ]).then(answer => {
-        console.log(answer);
+        //once we pushed everyone in, let's do the same with employeeArray
+        db.query(`SELECT * FROM employees`, (err, res) => {
+            for (var i = 0; i < res.length; i++) {
+                employeeArray.push(res[i].first_name + ' ' + res[i].last_name);
+            }
+            updatePrompts()
+        });
     });
+    function updatePrompts(){
+        inquirer.prompt([
+            {
+                name: 'employee',
+                type: 'list',
+                message: 'Select an employee.',
+                choices: employeeArray
+            },
+            {
+                name: 'role',
+                type: 'list',
+                message: 'Select a new role for the employee.',
+                choices: rolesArray
+            }
+        ]).then(answer => {
+            let employeeId = employeeArray.indexOf(answer.employee) + 1;
+            let roleId = rolesArray.indexOf(answer.role) + 1;
+            db.query(`UPDATE employees SET WHERE ?`,
+            {
+                employee_id: employeeId,
+            },
+            {
+                role_id: roleId
+            },
+            function(err) {
+                if (err) throw err;
+                console.table(answer);
+                startPrompt();
+            });
+        });
+    }
 }
